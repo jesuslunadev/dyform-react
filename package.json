@@ -1,0 +1,57 @@
+{
+  "name": "dyform-react",
+  "private": false,
+  "author": "Jesus Luna",
+  "type": "module",
+  "license": "MIT",
+  "version": "1.0.0",
+  "description": "Dynamic form based on schema and definitions for React",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "watch": "tsc --watch",
+    "lint": "eslint src --ext .ts"
+  },
+  "peerDependencies": {
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
+    "@mui/icons-material": "^6.1.7",
+    "@mui/material": "^6.1.7",
+    "@mui/x-date-pickers": "^7.23.1",
+    "dayjs": "^1.11.13",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "yup": "^1.4.0"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "devDependencies": {
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
+    "@mui/icons-material": "^6.1.7",
+    "@mui/material": "^6.1.7",
+    "@mui/x-date-pickers": "^7.23.1",
+    "@types/lodash": "^4.17.13",
+    "dayjs": "^1.11.13",
+    "eslint": "^8.57.1",
+    "install": "^0.13.0",
+    "npm": "^10.9.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.6.3",
+    "yup": "^1.4.0"
+  }
+}

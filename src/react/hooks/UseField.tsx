@@ -312,6 +312,7 @@ export const useField = (field: Field, canHandleModelChange: boolean, parentOnCh
   const eventContext: Partial<OnEventContext> = {
     setValue: setValue,
     setError: setError,
+    fieldSchema: field,
     setValueByFieldName: eventContextSetValueByFieldName,
     setHiddenByFieldName: eventContextSetHiddenByFieldName,
     setDisabledByFieldName: eventContextSetDisabledByFieldName,

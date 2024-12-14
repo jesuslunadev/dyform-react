@@ -24,6 +24,7 @@ export interface GetChoicesSyncAsyncParams {
 
 export interface OnEventContext {
   event: any;
+  fieldSchema: Field;
   setValue: (value: any) => void;
   setError: (error: string) => void;
   setValueByFieldName: (fieldName: string, value: any) => void;

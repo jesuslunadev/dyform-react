@@ -5,4 +5,3 @@
 ./.gitignore
 ./.idea
 ./tsconfig.json
-./package-lock.json

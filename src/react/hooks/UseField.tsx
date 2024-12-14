@@ -470,11 +470,17 @@ export const useField = (field: Field, canHandleModelChange: boolean, parentOnCh
   }, [dependsOnRef]);
 
   useEffect(() => {
-    setDisabled(formIsReadOnly || formIsDisabled);
+    setDisabled(formIsDisabled);
   }, [
     formIsDisabled,
     formIsReadOnly
   ]);
+
+  useEffect(() => {
+    if (disabled && formIsReadOnly){
+      setDisabled(false);
+    }
+  }, [disabled, formIsReadOnly])
 
   return {
     fieldProps,

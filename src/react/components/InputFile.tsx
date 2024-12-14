@@ -1,6 +1,7 @@
-import React, {FC, memo, useRef, useEffect} from "react";
+import React, {FC, memo, useRef, useEffect, useContext} from "react";
 import {FormControl, TextField, Typography} from "@mui/material";
 import {InputPropsComponent} from "../../common/types";
+import {FormContext} from "../context";
 
 /**
  * InputFile is a functional component that provides a file input field
@@ -37,6 +38,10 @@ export const InputFile: FC<InputPropsComponent> = memo(
       fileAccepts = [],
     } = field?.options ?? {};
 
+    const {
+      state: {formIsReadOnly}
+    } = useContext(FormContext);
+
     const ref = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -71,11 +76,12 @@ export const InputFile: FC<InputPropsComponent> = memo(
       handleOnChange({target: {value: newValue}} as any);
     }
 
+    const slotProps = {
+      input: {readOnly: formIsReadOnly}
+    };
+
     return (
       <FormControl error={!!error} fullWidth>
-
-
-
         <TextField
           inputRef={ref}
           type={field.type}
@@ -89,13 +95,14 @@ export const InputFile: FC<InputPropsComponent> = memo(
           placeholder={placeholder}
           variant={variant}
           helperText={error || helperText}
+          {...extraProps}
           slotProps={{
             htmlInput: {
               accept: fileAccepts.join(', '),
               multiple: fileMultiple,
-            }
+            },
+            ...slotProps
           }}
-          {...extraProps}
         />
         {fileAcceptsCleaned.length > 0 && fileShowAccepts && (
           <Typography

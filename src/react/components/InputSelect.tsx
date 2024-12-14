@@ -1,6 +1,7 @@
-import React, {FC, memo, RefObject, useEffect, useRef} from "react";
+import React, {FC, memo, RefObject, useContext, useEffect, useRef} from "react";
 import {CircularProgress, FormControl, FormHelperText, InputLabel, MenuItem, Select} from "@mui/material";
 import {FieldChoice, InputPropsComponent} from "../../common/types";
+import {FormContext} from "../context";
 
 /**
  * InputSelect is a functional component that renders a select input field with various custom configurations.
@@ -42,7 +43,9 @@ export const InputSelect: FC<InputPropsComponent> = memo((
     extraProps = {},
   } = field?.options ?? {};
 
-
+  const {
+    state: {formIsReadOnly}
+  } = useContext(FormContext);
 
   const ref = useRef<RefObject<any>>(null);
 
@@ -56,6 +59,9 @@ export const InputSelect: FC<InputPropsComponent> = memo((
   const helperTextSx = !!error || errorGettingChoices
     ? {color: 'error !important'} : {};
 
+  const slotProps = {
+    input: {readOnly: formIsReadOnly}
+  }
 
   const loadingEndAdornment = <CircularProgress sx={{marginLeft: '-80px'}} color="inherit" size={20}/>
 
@@ -85,6 +91,7 @@ export const InputSelect: FC<InputPropsComponent> = memo((
         placeholder={placeholder}
         variant={variant}
         {...extraProps}
+        slotProps={slotProps}
       >
         {choicesList &&
           choicesList.map((option: FieldChoice) => (

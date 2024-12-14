@@ -7,3 +7,4 @@ export * from './DependsOnCheckOperator';
 export * from './IsValidComponent';
 export * from './RenderGenericReactComponent';
 export * from './CreateFormOutput';
+export * from './FlattenModel';

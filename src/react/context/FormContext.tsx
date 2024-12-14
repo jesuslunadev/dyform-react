@@ -2,7 +2,7 @@ import React from "react";
 import {ContextActionType, ContextType} from "../../common/types";
 
 
-export const FormContext = React.createContext<ContextType | undefined>(undefined as any);
+export const FormContext = React.createContext<ContextType>({} as ContextType);
 
 /**
  * ContextReducer is a reducer function that manages the state of a form within an application. It handles various actions to update the form's state by modifying properties such as form model, fields, schema, and form status.

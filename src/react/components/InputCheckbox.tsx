@@ -1,6 +1,7 @@
-import React, {FC, memo, useRef, RefObject, useEffect, ReactElement} from "react";
+import React, {FC, memo, useRef, RefObject, useEffect, ReactElement, useContext} from "react";
 import {FormControl, FormControlLabel, FormHelperText} from "@mui/material";
 import {InputPropsComponent} from "../../common/types";
+import {FormContext} from "../context";
 
 
 interface InputCheckboxProps extends InputPropsComponent {
@@ -47,6 +48,10 @@ export const InputCheckbox: FC<InputCheckboxProps> = memo(
       extraProps = {}
     } = field?.options ?? {};
 
+    const {
+      state: {formIsReadOnly}
+    } = useContext(FormContext);
+
     const ref = useRef<RefObject<any>>(null);
 
     useEffect(() => {
@@ -54,6 +59,10 @@ export const InputCheckbox: FC<InputCheckboxProps> = memo(
         handleSetRef(ref);
       }
     }, [ref]);
+
+    const inputProps = {
+      readOnly: formIsReadOnly
+    }
 
     return (
       <FormControl error={!!error} variant={variant} fullWidth>
@@ -70,11 +79,11 @@ export const InputCheckbox: FC<InputCheckboxProps> = memo(
                 handleOnChange({ target: { value: e.target.checked } });
               },
               onBlur: handleOnBlur,
+              inputProps
             })
           }
           label={field.label}
         />
-
         {helperText || error && <FormHelperText>{error ?? helperText}</FormHelperText>}
       </FormControl>
     )

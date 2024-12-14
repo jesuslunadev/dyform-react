@@ -73,6 +73,10 @@ export const RenderGroup: FC<{ group: FormGroup }> = React.memo(({group}) => {
       minItems = null,
     } = arrayOfFieldsOptions ?? {};
 
+    const {
+      state: {formIsReadOnly, formIsDisabled}
+    } = useContext(FormContext);
+
     const [totalItems, setTotalItems] = useState(0);
     const [deletedIndices, setDeletedIndices] = useState<Set<number>>(new Set());
     const [arrayInitialValues, setArrayInitialValues] = useState<any[]>([]);
@@ -133,7 +137,7 @@ export const RenderGroup: FC<{ group: FormGroup }> = React.memo(({group}) => {
 
     const isAddBtnDisabled = useCallback(() => {
       return maxItems ? getVisibleItemsCount() >= maxItems : false;
-    }, [maxItems, getVisibleItemsCount]);
+    }, [maxItems, getVisibleItemsCount, formIsDisabled]);
 
     const handleAddItems = useCallback(() => {
       const newFormModel = cloneDeep(contextState?.formModel);
@@ -240,7 +244,7 @@ export const RenderGroup: FC<{ group: FormGroup }> = React.memo(({group}) => {
       if (React.isValidElement(addBtn)) {
         return React.cloneElement(addBtn as ReactElement<ButtonProps>, {
           onClick: handleAddItems,
-          disabled: isAddBtnDisabled(),
+          disabled: isAddBtnDisabled() || formIsDisabled,
         });
       }
 
@@ -318,7 +322,7 @@ export const RenderGroup: FC<{ group: FormGroup }> = React.memo(({group}) => {
         </Grid>
         {isArrayOfFields && canAdd && (
           <Divider flexItem textAlign={'right'} variant={'middle'} sx={{mt: 4}}>
-            {renderAddButton()}
+            {!formIsReadOnly && renderAddButton()}
           </Divider>
         )}
       </GroupComponent>

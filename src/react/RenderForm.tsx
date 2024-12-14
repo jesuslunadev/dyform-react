@@ -6,9 +6,9 @@ import React, {
   ReactElement,
   useImperativeHandle,
   Reducer,
-  FormEvent,
+  FormEvent, useState,
 } from 'react';
-import {ButtonProps, Typography} from '@mui/material';
+import {Box, ButtonProps, Typography} from '@mui/material';
 import {LocalizationProvider} from '@mui/x-date-pickers';
 import {AdapterDayjs} from '@mui/x-date-pickers/AdapterDayjs';
 
@@ -19,39 +19,53 @@ import {
   FormButton,
   RenderDynamicFormProps,
   StateFieldType,
-  FormGroup, FormSchema
+  FormGroup, FormSchema, FormIsLoadingOpts
 } from "../common/types";
 import {RenderGroup} from "./components";
 import {ContextReducer, FormContext} from "./context";
-import {createFormOutput, hasDuplicateGroupNames} from "../common/utils";
-import {FormButtonComponent} from "./components/utils";
+import {createFormOutput, flattenModel, hasDuplicateGroupNames} from "../common/utils";
+import {BackdropFormLoading, FormButtonComponent} from "./components/utils";
 
 /**
- * RenderForm is a React forwardRef component designed to render a dynamic form
- * based on provided schema and model properties. It leverages internal hooks
- * to manage the form's state, handle submission, and update field values.
+ * `RenderForm` is a React functional component that serves as a dynamic and customizable form renderer.
+ * It utilizes a schema-based approach to build forms and provides extensive control over form behaviors, validation,
+ * and submission mechanisms. The component relies on React's `forwardRef` to expose imperative handlers
+ * for advanced interactions and state manipulations.
  *
- * The component supports features such as:
- * - Rendering form fields grouped by categories.
- * - Dynamically updating field values and errors.
- * - Toggling form disability and read-only states.
- * - Providing a mechanism for form submission through an accessible submit button.
+ * The component offers several key features:
  *
- * The schema defines the form structure, including description, groups, submission
- * button properties, and other attributes relevant to the form's configuration.
+ * - Schema-driven form generation: Dynamically builds form fields and groups based on a provided schema.
+ * - State management: Manages form state, including field values, validation states, disabled/read-only states, and loading states.
+ * - Imperative API: Exposes methods for submitting the form, setting errors, clearing values, disabling/enabling the form,
+ *   updating field values, and marking the form as loading.
+ * - Field validation: Handles validation mechanisms within fields, including marking invalid fields and disabling the
+ *   submit button if necessary.
+ * - Customization: Allows custom rendering of form elements, including submit buttons and field groups.
  *
- * @param {RenderDynamicFormProps} props - The properties required to render the dynamic form.
- * @param {FormSchema} props.schema - The schema defining the form's structure and behavior.
- * @param {object} props.model - The data model associated with the form, representing initial field values.
+ * The schema provided as a prop is expected to include the following:
+ * - A description of the form (optional).
+ * - Groups of fields to be rendered.
+ * - Settings for autocomplete behavior, default disabled/read-only states, and loading indication.
+ * - Information on the output format of the form data.
  *
- * @param {React.Ref<FormReactHandle>} ref - A reference object allowing imperative form methods
- * such as submit, setErrors, setFormDisabled, setFormReadOnly, clearForm, and setFormValues.
+ * Props:
+ * - `schema`: The schema for the form indicating its layout, fields, and behavior.
+ * - `model`: The initial model containing field values to populate the form.
  *
- * @returns {ReactElement} The React element representing the rendered form.
+ * Exposed imperative methods:
+ * - `submit`: Triggers the form submission logic.
+ * - `setErrors`: Accepts an array of error messages to apply to specific fields.
+ * - `setFormDisabled`: Disables or enables the entire form.
+ * - `setFormReadOnly`: Marks the form as read-only or editable.
+ * - `clearForm`: Clears all field values to reset the form.
+ * - `setFormValues`: Updates field values programmatically.
+ * - `setFormIsLoading`: Toggles the loading state for the form.
  *
+ * The component also ensures duplicate group names in the schema are avoided and provides mechanisms
+ * to perform customizations and validations on field groups during the rendering process.
  */
 export const RenderForm = forwardRef<FormReactHandle, RenderDynamicFormProps>(
-  ({schema, model}, ref) => {
+  ({schema, isLoading, isDisabled, isReadOnly, model}, ref) => {
 
     const {
       description,
@@ -59,8 +73,11 @@ export const RenderForm = forwardRef<FormReactHandle, RenderDynamicFormProps>(
       submitButton = null,
       onSubmit,
       autocompleteOff,
-      isDisabled: FormIsDisabled = false,
-      isReadOnly: FormIsReadOnly = false,
+      isLoadingOpts = {
+        sx: {},
+        label: '',
+        spinner: undefined,
+      },
       outputFormat = 'model'
     } = schema as FormSchema;
 
@@ -68,14 +85,17 @@ export const RenderForm = forwardRef<FormReactHandle, RenderDynamicFormProps>(
       formModel: model,
       fields: [],
       schema,
-      formIsDisabled: FormIsDisabled,
-      formIsReadOnly: FormIsReadOnly,
+      formIsDisabled: isDisabled as boolean,
+      formIsReadOnly: isReadOnly as boolean,
     };
+
 
     const [state, dispatch] = useReducer<Reducer<ContextStateType, any>>(
       ContextReducer,
       initialState
     );
+    const [isLoadingForm, setIsLoadingForm] = useState<boolean>(isLoading ?? false);
+    const [isLoadingFormOpts, setIsLoadingFormOpts] = useState<FormIsLoadingOpts>(isLoadingOpts);
     const formRef = useRef<HTMLFormElement>(null);
     const someInvalid = state.fields.some(field => field.isInvalid);
 
@@ -83,9 +103,38 @@ export const RenderForm = forwardRef<FormReactHandle, RenderDynamicFormProps>(
       hasDuplicateGroupNames(groups);
     }, [groups]);
 
+    useEffect(() => {
+      if (model && typeof model === 'object') {
+        const values = flattenModel(model);
+        updateFieldValues(
+          values, (field, value) => field.useField.handleOnChange({target: {value}} as any),
+        );
+      }
+    }, [model]);
+
+    useEffect(() => {
+      setIsLoadingForm(isLoading as boolean);
+    }, [isLoading]);
+
+    useEffect(() => {
+      dispatch({
+        type: ContextActionType.SetFormIsReadOnly,
+        payload: isReadOnly as boolean,
+      })
+    }, [isReadOnly]);
+
+    useEffect(() => {
+      dispatch({
+        type: ContextActionType.SetFormIsDisabled,
+        payload: isDisabled as boolean,
+      })
+    }, [isDisabled]);
 
     const handleSubmit = async (e: FormEvent) => {
       e.preventDefault();
+      if (someInvalid) {
+        return;
+      }
       const output = createFormOutput(state.fields, outputFormat, state.formModel);
       onSubmit?.({output});
       return output;
@@ -93,13 +142,20 @@ export const RenderForm = forwardRef<FormReactHandle, RenderDynamicFormProps>(
 
 
     const updateFieldValues = (
-      updates: Array<{ name: string, value: any }>,
+      updates: Array<{ name?: string, modelPath?: string; value: any }>,
       callback: (field: StateFieldType, value: any) => void
     ) => {
-      updates.forEach(({name, value}) => {
+      updates.forEach(({name, modelPath, value}) => {
         state.fields.forEach((field: StateFieldType) => {
-          if (field.name === name) {
-            callback(field, value);
+          if (name) {
+            if (field.name === name) {
+              callback(field, value);
+            }
+          }
+          if (modelPath && field?.schema?.modelPath) {
+            if (field?.schema?.modelPath === modelPath) {
+              callback(field, value);
+            }
           }
         });
       });
@@ -135,11 +191,19 @@ export const RenderForm = forwardRef<FormReactHandle, RenderDynamicFormProps>(
 
       setFormValues: (args: any) => {
         updateFieldValues(
-          args, (field, value) => field.useField.setValue(value)
+          args, (field, value) => field.useField.handleOnChange({target: {value}} as any),
         );
       },
+
+      setFormIsLoading: (isLoading: boolean, options?: FormIsLoadingOpts) => {
+        setIsLoadingForm(isLoading);
+        if (options) {
+          setIsLoadingFormOpts(options);
+        }
+      }
     }));
 
+    const submitButtonDisabled = someInvalid || (isDisabled as boolean) || (isReadOnly as boolean);
 
     const renderSubmitButton = (): ReactElement | null => {
       if (!submitButton) return null;
@@ -150,7 +214,7 @@ export const RenderForm = forwardRef<FormReactHandle, RenderDynamicFormProps>(
             (submitButton as ReactElement)?.props?.onClick?.(e as any);
             await handleSubmit(e);
           },
-          disabled: someInvalid,
+          disabled: submitButtonDisabled,
         });
       }
 
@@ -158,31 +222,36 @@ export const RenderForm = forwardRef<FormReactHandle, RenderDynamicFormProps>(
         <FormButtonComponent
           submitButton={submitButton as FormButton}
           handleSubmit={handleSubmit}
-          isDisabled={someInvalid}
+          isDisabled={submitButtonDisabled}
         />
       );
     };
 
     return (
-      <FormContext.Provider value={{state, dispatch}}>
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <form
-            autoComplete={autocompleteOff ? 'off' : 'on'}
-            onSubmit={handleSubmit}
-            ref={(ref ?? formRef) as any}
-          >
-            {description && (
-              <Typography variant="body1">{description}</Typography>
-            )}
+      <Box style={{position: 'relative'}}>
+        <FormContext.Provider value={{state, dispatch}}>
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <form
+              autoComplete={autocompleteOff ? 'off' : 'on'}
+              onSubmit={handleSubmit}
+              ref={(ref ?? formRef) as any}
+            >
+              {description && (
+                <Typography variant="body1">{description}</Typography>
+              )}
 
-            {groups.map((group: FormGroup) => (
-              <RenderGroup key={group.name} group={group}/>
-            ))}
+              {groups.map((group: FormGroup) => (
+                <RenderGroup key={group.name} group={group}/>
+              ))}
 
-            {renderSubmitButton()} 
-          </form>
-        </LocalizationProvider>
-      </FormContext.Provider>
+              {!isReadOnly && renderSubmitButton()}
+            </form>
+
+            {isLoadingForm && <BackdropFormLoading options={isLoadingFormOpts}/>}
+
+          </LocalizationProvider>
+        </FormContext.Provider>
+      </Box>
     );
   }
 );

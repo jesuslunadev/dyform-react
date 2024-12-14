@@ -1,7 +1,8 @@
-import React, {FC, memo, useRef, RefObject, useEffect} from "react";
-import {FormControl, TextField} from "@mui/material";
+import React, {FC, memo, useRef, RefObject, useEffect, useContext} from "react";
+import {Box, FormControl, TextField} from "@mui/material";
 import {InputPropsComponent} from "../../common/types";
 import {FieldType} from "../../common/enums";
+import {FormContext} from "../context";
 
 /**
  * InputText is a functional component that renders a text input field with customizable properties.
@@ -41,6 +42,10 @@ export const InputText: FC<InputPropsComponent> = memo(
    }) => {
 
     const {
+      state: {formIsReadOnly}
+    } = useContext(FormContext);
+
+    const {
       required,
       size,
       disabled,
@@ -57,6 +62,10 @@ export const InputText: FC<InputPropsComponent> = memo(
         handleSetRef(ref);
       }
     }, []);
+
+    const slotProps = {
+      input: {readOnly: formIsReadOnly}
+    };
 
     return (
       <FormControl error={!!error} fullWidth>
@@ -77,6 +86,7 @@ export const InputText: FC<InputPropsComponent> = memo(
           multiline={field.type === FieldType.TEXTAREA}
           helperText={error || helperText}
           {...extraProps}
+          slotProps={slotProps}
         />
       </FormControl>
     )

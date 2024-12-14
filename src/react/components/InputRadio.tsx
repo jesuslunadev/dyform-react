@@ -1,4 +1,4 @@
-import React, {FC, memo, useRef, RefObject, useEffect} from "react";
+import React, {FC, memo, useRef, RefObject, useEffect, useContext} from "react";
 import {
   FormControl,
   FormControlLabel,
@@ -6,6 +6,7 @@ import {
   RadioGroup,
 } from "@mui/material";
 import {InputPropsComponent} from "../../common/types";
+import {FormContext} from "../context";
 
 /**
  * InputRadio functional component renders a group of radio buttons based on provided choices.
@@ -48,6 +49,10 @@ export const InputRadio: FC<InputPropsComponent> = memo(
       extraProps = {},
     } = field?.options ?? {};
 
+    const {
+      state: {formIsReadOnly}
+    } = useContext(FormContext);
+
     const ref = useRef<RefObject<any>>(null);
 
     useEffect(() => {
@@ -76,9 +81,10 @@ export const InputRadio: FC<InputPropsComponent> = memo(
           {!errorGettingChoices && choicesList?.map(
             (option, index) => (
               <FormControlLabel
+                disabled={disabled}
                 key={option.key}
                 value={option.value}
-                control={<Radio/>}
+                control={<Radio inputProps={{readOnly: formIsReadOnly}}/>}
                 label={option.label}
               />
             ))}

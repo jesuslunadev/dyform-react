@@ -1,9 +1,10 @@
-import React, {Fragment, memo, ReactElement} from "react";
+import React, {Fragment, memo, ReactElement, useContext} from "react";
 import {ArrayOfFieldsChange, Field, FormButton} from "../../common/types";
 import {Button, ButtonProps, Divider} from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import {RenderField} from "./RenderField.js";
 import {renderGenericReactComponent} from "../../common/utils";
+import {FormContext} from "../context";
 
 type RenderArrayFieldsGroupProps = {
   fields: Field[];
@@ -113,6 +114,10 @@ export const RenderArrayFieldsGroup = memo((props: RenderArrayFieldsGroupProps) 
     isArraySimple
   } = props;
 
+  const {
+    state: {formIsReadOnly, formIsDisabled}
+  } = useContext(FormContext);
+
   const initialValuesByIndex = initialValues?.[index] ?? null;
   const isRemoveDisabled = !(index >= (minItems ?? DEFAULT_MIN_ITEMS));
 
@@ -120,7 +125,7 @@ export const RenderArrayFieldsGroup = memo((props: RenderArrayFieldsGroupProps) 
     if (React.isValidElement(removeBtn)) {
       return React.cloneElement(removeBtn as ReactElement<ButtonProps>, {
         onClick: () => onRemove(index),
-        disabled: isRemoveDisabled,
+        disabled: isRemoveDisabled || formIsDisabled || formIsReadOnly,
       });
     }
 

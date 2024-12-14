@@ -1,8 +1,9 @@
-import React, { FC, memo, useRef, RefObject, useEffect, useState } from "react";
+import React, {FC, memo, useRef, RefObject, useEffect, useState, useContext} from "react";
 import { FormControl } from "@mui/material";
 import { InputPropsComponent } from "../../common/types";
 import { DateTimePicker } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
+import {FormContext} from "../context";
 
 /**
  * InputDatetime is a memoized functional component that renders a date-time picker input field.
@@ -56,11 +57,14 @@ export const InputDatetime: FC<InputPropsComponent> = memo(
       extraProps = {}
     } = field?.options ?? {};
 
+    const {
+      state: {formIsReadOnly}
+    } = useContext(FormContext);
+
     const ref = useRef<RefObject<any>>(null);
 
-    // Estado local para el valor del DateTimePicker usando Dayjs
     const [localValue, setLocalValue] = useState<Dayjs | null>(
-      value ? dayjs(value) : null // Inicializar con el valor del padre convertido a Dayjs
+      value ? dayjs(value) : null
     );
 
     useEffect(() => {
@@ -84,6 +88,7 @@ export const InputDatetime: FC<InputPropsComponent> = memo(
           onChange={handleLocalChange}
           disabled={disabled}
           label={field.label}
+          {...extraProps}
           slotProps={{
             textField: {
               id: field.id,
@@ -93,10 +98,11 @@ export const InputDatetime: FC<InputPropsComponent> = memo(
               size: size,
               placeholder: placeholder,
               helperText: error || helperText,
-            },
+              inputProps: {
+                readOnly: formIsReadOnly
+              }
+            }
           }}
-
-          {...extraProps}
         />
         {helperText && <p>{helperText}</p>}
       </FormControl>

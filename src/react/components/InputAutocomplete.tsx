@@ -1,4 +1,4 @@
-import {FC, memo, RefObject, useEffect, useRef} from "react";
+import {FC, memo, RefObject, useContext, useEffect, useRef} from "react";
 import {
   Autocomplete, AutocompleteRenderInputParams, CircularProgress,
   FormControl,
@@ -7,6 +7,7 @@ import {
 } from "@mui/material";
 import {FieldChoice, InputPropsComponent} from "../../common/types";
 import React from "react";
+import {FormContext} from "../context";
 
 /**
  * InputAutocomplete is a React functional component designed to render an
@@ -39,9 +40,11 @@ export const InputAutocomplete: FC<InputPropsComponent> = memo((
     extraProps = {},
   } = field?.options ?? {};
 
+  const {
+    state: {formIsReadOnly}
+  } = useContext(FormContext);
 
   const ref = useRef<RefObject<any>>(null);
-
 
   useEffect(() => {
     if (ref.current) {
@@ -67,6 +70,7 @@ export const InputAutocomplete: FC<InputPropsComponent> = memo((
         loading={fieldLoading}
         disabled={disabled || errorGettingChoices || fieldLoading}
         options={choicesList || []}
+        readOnly={formIsReadOnly}
         getOptionLabel={(option: FieldChoice) => option?.label ?? ''}
         renderInput={(params: AutocompleteRenderInputParams) => (
           <TextField

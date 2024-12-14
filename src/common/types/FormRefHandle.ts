@@ -5,6 +5,7 @@ export interface FormReactHandle {
   setErrors: (errors: SetErrorsProps[]) => void;
   setFormDisabled: (isDisabled: boolean) => void;
   setFormReadOnly: (isReadOnly: boolean) => void;
+  setFormIsLoading: (isLoading: boolean) => void;
   clearForm: () => void;
-  setFormValues: (args: { name: string; value: string }[]) => void;
+  setFormValues: (args: { name?: string; modelPath?: string; value: string }[]) => void;
 }

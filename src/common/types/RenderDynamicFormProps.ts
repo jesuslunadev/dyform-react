@@ -2,7 +2,7 @@ import {FormSchema} from "./Form";
 
 export interface RenderDynamicFormProps {
   schema: FormSchema;
-  model?: any;
+  model?: object;
   isLoading?: boolean;
   isReadOnly?: boolean;
   isDisabled?: boolean;

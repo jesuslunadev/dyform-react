@@ -3,6 +3,7 @@ import {ReactElement} from "react";
 import {FormButton} from "./FormButton";
 import {SxProps} from "@mui/material";
 import {CircularProgressProps} from "@mui/material/CircularProgress/CircularProgress";
+import {Field} from "./Field";
 
 export interface FormOnSubmitParams {
   fields: {
@@ -24,7 +25,7 @@ export interface FormOnErrorsParams {
   }[];
 }
 
-export interface FormIsLoadingOpts  {
+export interface FormIsLoadingOpts {
   sx?: SxProps | object;
   label?: ReactElement | string;
   spinner?: ReactElement | CircularProgressProps;
@@ -35,7 +36,15 @@ export interface FormSchema {
   description?: string | ReactElement;
   groups: FormGroup[];
   submitButton?: ReactElement | FormButton;
-  onSubmit?: (args: { output: any }) => any;
+  onSubmit?: (args: {
+    output: any, errors?: {
+      fieldName: string;
+      fieldSchema: Field;
+      value: any;
+      error: string;
+      isInvalid: boolean;
+    }[]
+  }) => any;
   onErrors?: (args: FormOnErrorsParams) => any;
   autocompleteOff?: boolean;
   outputFormat?: "json" | "model";

@@ -130,9 +130,25 @@ export const RenderForm = forwardRef<FormReactHandle, RenderDynamicFormProps>(
       })
     }, [isDisabled]);
 
+
+    const getInvalidFields = () => {
+      return state.fields.filter(f => f.isInvalid)
+        .map(({name, schema, isInvalid, error, value}) => ({
+          fieldName: name,
+          fieldSchema: schema,
+          isInvalid,
+          error,
+          value
+        }));
+    }
+
     const handleSubmit = async (e: FormEvent) => {
-      e.preventDefault();
+      e?.preventDefault();
       if (someInvalid) {
+        onSubmit?.({
+          output: null,
+          errors: getInvalidFields()
+        });
         return;
       }
       const output = createFormOutput(state.fields, outputFormat, state.formModel);

@@ -5,7 +5,8 @@ import {
   FieldChoice,
   FieldHook,
   GetChoicesSyncAsyncParams,
-  OnEventContext, StateFieldType
+  OnEventContext,
+  StateFieldType
 } from "../../common/types";
 import React, {useContext, useEffect, useState} from "react";
 import {availableMaskTypes, defaultFieldProps, fieldsCanPopulate} from "../../common/constants";
@@ -46,8 +47,7 @@ export const useField = (field: Field, canHandleModelChange: boolean, parentOnCh
   const [error, setError] = useState<string | null>(null);
   const [value, setValue] = useState<any>('');
   const [disabled, setDisabled] = useState<boolean>(
-    field?.options?.isReadOnly ||
-    field?.options?.disabled || false
+    field?.options?.disabled === true || field?.options?.isReadOnly === true
   );
   const [hidden, setHidden] = useState<boolean>(
     field?.options?.hidden || false
@@ -64,9 +64,25 @@ export const useField = (field: Field, canHandleModelChange: boolean, parentOnCh
     return `${field.name}_${generateRandomUid()}${concatParent}`;
   }, [field.name, parentIndex]);
 
-  const initialValue = field?.modelPath
-    ? get(formModel, field?.modelPath)
-    : field?.options?.defaultValue ?? "";
+  const getInitialValue = () => {
+
+    let value: any = "";
+
+    if (field?.options?.defaultValue) {
+      value = field?.options?.defaultValue;
+    } else if (field?.modelPath) {
+      value = get(formModel, field?.modelPath) ?? "";
+    }
+
+    if (field.type === FieldType.SWITCH
+      || field.type === FieldType.CHECKBOX) {
+      value = Boolean(value);
+    }
+
+    return value;
+  }
+
+  const initialValue = getInitialValue();
 
   const fieldProps: Field = {
     ...field,
@@ -405,12 +421,21 @@ export const useField = (field: Field, canHandleModelChange: boolean, parentOnCh
 
   useEffect(() => {
     if (initialValue) {
-      handleOnChange({target: {value: initialValue}} as any, true).catch();
+      handleOnChange({target: {value: initialValue}} as any, true).catch(e => {
+        console.error(`[InitialValueSet] Error: `, e);
+      });
     } else if (
       fieldProps?.options?.required ||
       hasRequiredValidator(fieldProps?.options?.validators ?? [])
     ) {
       updateContext({isInvalid: true});
+    }
+
+    if (!initialValue) {
+      if (field.type === FieldType.CHECKBOX
+        || field.type === FieldType.SWITCH) {
+        setValue(false);
+      }
     }
   }, []);
 
@@ -466,7 +491,9 @@ export const useField = (field: Field, canHandleModelChange: boolean, parentOnCh
   }, [value]);
 
   useEffect(() => {
-    handleDependsOn();
+    handleDependsOn().catch(e => {
+      console.error('[DependsOn] Error: ', e);
+    });
   }, [dependsOnRef]);
 
   useEffect(() => {
@@ -477,8 +504,15 @@ export const useField = (field: Field, canHandleModelChange: boolean, parentOnCh
   ]);
 
   useEffect(() => {
-    if (disabled && formIsReadOnly){
+    if (formIsReadOnly) {
       setDisabled(false);
+      return;
+    }
+    if (!disabled) {
+      if (field?.options?.disabled === true
+        || field?.options?.isReadOnly === true) {
+        setDisabled(true);
+      }
     }
   }, [disabled, formIsReadOnly])
 
